@@ -9,8 +9,6 @@ An innovative solution that redefines traditional navigation, allowing users to 
  
 #### You can install these libraries using pip:<br>
   -  `pip install opencv-python mediapipe pyautogui`<br>
-#### Or you can use the following command using pip to avoid any library version issue:<br>
-  - `pip install -r requirements.txt`
 
 ## How to Run
 You can downlaod the chrom extension with the name of  name PlamPilot or install the required libraries, run the `app.py` file in a Python environment with a webcam. The program will start capturing video from the webcam, and the mouse cursor can be controlled using the following hand gestures:
