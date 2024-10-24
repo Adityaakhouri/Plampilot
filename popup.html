@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palm Pilot</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            width: 220px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6c63ff, #00bfa6);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: 160px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #5a53e6, #00a48d);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .footer a {
+            color: #555;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            color: #000;
+        }
+
+        video {
+            display: none;
+        }
+    </style>
+
+    <!-- Load MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>
+</head>
+<body>
+    <h3>Hand Mouse Tracker</h3>
+    <button id="start">Start Tracking</button>
+    <button id="stop">Stop Tracking</button>
+    
+    <video id="video" width="640" height="480"></video>
+
+    <div class="footer">
+        Powered by <a href="https://github.com/Adityaakhouri" target="_blank">GitHub/AdityaKhouri</a>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('video');
+        const hands = new Hands.HANDs({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }
+        });
+
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+
+        let isTracking = false;
+
+        // Setup the camera
+        async function setupCamera() {
+            const camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    if (isTracking) {
+                        await detectHands();
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            videoElement.play();
+            return camera.start();
+        }
+
+        // Function to detect hands
+        async function detectHands() {
+            const results = await hands.send({image: videoElement});
+            if (results.multiHandLandmarks) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    // Get the index finger tip position (landmark 8)
+                    const x = landmarks[8].x;  // X coordinate of index finger tip
+                    const y = landmarks[8].y;  // Y coordinate of index finger tip
+
+                    // Move mouse (or any element) based on hand position
+                    moveMouse(x, y);
+                }
+            }
+        }
+
+        // Move the mouse based on the hand landmark coordinates
+        function moveMouse(x, y) {
+            const newX = x * window.innerWidth; // Scale x to screen width
+            const newY = y * window.innerHeight; // Scale y to screen height
+
+            console.log(`Moving mouse to: (${newX.toFixed(2)}, ${newY.toFixed(2)})`);
+            // Uncomment the line below for scrolling effect
+            // window.scrollTo(newX, newY);
+        }
+
+        // Event listener for starting the hand tracking
+        document.getElementById('start').addEventListener('click', async () => {
+            try {
+                isTracking = true;
+                await setupCamera();         // Setup the camera
+                videoElement.style.display = 'block'; // Show video stream
+            } catch (error) {
+                console.error("Error starting hand tracking:", error);
+            }
+        });
+
+        // Event listener for stopping the hand tracking
+        document.getElementById('stop').addEventListener('click', () => {
+            isTracking = false;
+            videoElement.pause();
+            videoElement.style.display = 'none'; // Hide video stream for privacy
+            videoElement.srcObject.getTracks().forEach(track => track.stop()); // Stop the camera
+        });
+    </script>
+</body>
+</html>
